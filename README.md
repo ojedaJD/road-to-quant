@@ -1,5 +1,5 @@
 # Road to Quant
- C++ projects that begin with Intro to C++ quizzes that were covered in Ohio State's C++ course with Dr. Wilcox. <br>
+ C++ projects that begin with Intro to C++ quizzes that were covered in Ohio State's C++ course. <br>
  I want this repo to serve as a guide to anyone trying to learn C++ and wants material that can also be used as a supplement to their learning journey. <br>
  I begin with the following:
 <li>Quiz 1 - C++ Basics & Math Functions
