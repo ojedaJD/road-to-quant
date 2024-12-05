@@ -1,2 +1,2 @@
 # road to quant
- c++ projects that begin with Intro to C++ quizzes that were covered in Ohio State's C++ course with Dr. Wilcox.
+ C++ projects that begin with Intro to C++ quizzes that were covered in Ohio State's C++ course with Dr. Wilcox.
