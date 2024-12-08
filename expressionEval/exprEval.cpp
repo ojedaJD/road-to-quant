@@ -10,13 +10,19 @@
 #include <unordered_map>
 #include <set>
 
-// struct to represent tokens
+/**
+ * @struct Token
+ * @brief Represents a token in the input Boolean expression.
+ */
 struct Token {
     std::string type; // type of the token
     std::string value; // boolean expressions such as AND, OR, etc.
 };
 
-// struct to represent nodes in the AST
+/**
+ * @struct ASTNode
+ * @brief Represents a node in the Abstract Syntax Tree (AST).
+ */
 struct ASTNode {
     std::string value; // operator or variable name -> "AND", etc.
     ASTNode* left; // pointer for left child
@@ -25,7 +31,11 @@ struct ASTNode {
     ASTNode(std::string val) : value(val), left(nullptr), right(nullptr) {}
 };
 
-// function to tokenize the input
+/**
+ * @brief Tokenizes a Boolean expression into tokens.
+ * @param input The input Boolean expression as a string.
+ * @return A vector of Token objects.
+ */
 std::vector<Token> tokenize(const std::string& input) {
     std::vector<Token> tokens; // stores the tokens taken from the input
     std::string current; // hold the current token thats being built
@@ -56,7 +66,12 @@ std::vector<Token> tokenize(const std::string& input) {
     return tokens;
 }
 
-// function to parse tokens into an AST
+/**
+ * @brief Parses tokens into an Abstract Syntax Tree (AST).
+ * @param tokens The vector of tokens to parse.
+ * @param idx The current index in the token vector.
+ * @return A pointer to the root of the AST.
+ */
 ASTNode* parseExpression(std::vector<Token>& tokens, size_t& idx) {
     if (tokens[idx].type == "VARIABLE" || tokens[idx].type == "CONSTANT") {
         return new ASTNode(tokens[idx++].value); // created leaf node before moving to next token
@@ -80,7 +95,12 @@ ASTNode* parseExpression(std::vector<Token>& tokens, size_t& idx) {
     return nullptr;
 }
 
-// function to evaluate the AST
+/**
+ * @brief Evaluates a Boolean expression represented by an AST.
+ * @param node The root of the AST.
+ * @param variableValues A map of variable names to their Boolean values.
+ * @return The result of the evaluation (true/false).
+ */
 bool evaluateAST(ASTNode* node, const std::unordered_map<std::string, bool>& variableValues) {
     if (node->value == "TRUE") return true;
     if (node->value == "FALSE") return false;
@@ -90,7 +110,10 @@ bool evaluateAST(ASTNode* node, const std::unordered_map<std::string, bool>& var
     return variableValues.at(node->value); // lookup var value
 }
 
-// function to delete the AST and free memory
+/**
+ * @brief Deletes an AST and frees its memory.
+ * @param node The root of the AST to delete.
+ */
 void deleteAST(ASTNode* node) {
     if (!node) return;
     deleteAST(node->left);
@@ -98,6 +121,13 @@ void deleteAST(ASTNode* node) {
     delete node;
 }
 
+
+/**
+ * @brief The main function of the program.
+ *        Prompts the user for input, tokenizes the expression,
+ *        parses it into an AST, evaluates it, and outputs the result.
+ * @return int Exit status of the program.
+ */
 int main() 
 {
     std::string expression;
@@ -146,6 +176,6 @@ int main()
 
     // free the dynamically allocated AST memory
     deleteAST(ast);
-    
+
     return 0;
 }
