@@ -1,3 +1,8 @@
+/**
+ * @author JD Ojeda
+ * @brief Program to evaluate Boolean algebra expressions using Abstract Syntax Tree.
+ */
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -5,15 +10,17 @@
 #include <unordered_map>
 #include <set>
 
+// struct to represent tokens
 struct Token {
     std::string type; // type of the token
     std::string value; // boolean expressions such as AND, OR, etc.
 };
 
+// struct to represent nodes in the AST
 struct ASTNode {
-    std::string value; // operator or variable name
-    ASTNode* left; // left child
-    ASTNode* right; // right child
+    std::string value; // operator or variable name -> "AND", etc.
+    ASTNode* left; // pointer for left child
+    ASTNode* right; // pointer for right child
 
     ASTNode(std::string val) : value(val), left(nullptr), right(nullptr) {}
 };
@@ -23,13 +30,18 @@ std::vector<Token> tokenize(const std::string& input) {
     std::vector<Token> tokens; // stores the tokens taken from the input
     std::string current; // hold the current token thats being built
 
-    for (char c : input) {
-        if (std::isspace(c)) {
+    for (size_t i = 0; i < input.length(); i++) {
+        char c = input[i];
+        if (std::isspace(c)) { // skip spaces
             continue;
-        } else if (std::isalpha(c)) {
+        } else if (std::isalpha(c)) { // build the variables/operators -> "AND", etc.
             current += c;
-        } else {
-            if (!current.empty()) {
+            if (current == "AND" || current == "OR" || current == "NOT") {
+                tokens.push_back({ "OPERATOR", current });
+                current.clear();
+            }
+        } else { // handle the parentheses and single char tokens
+            if (!current.empty()) { // push var token before special characters
                 tokens.push_back({ "VARIABLE", current });
                 current.clear();
             }
@@ -38,7 +50,7 @@ std::vector<Token> tokenize(const std::string& input) {
             }
         }
     }
-    if (!current.empty()) {
+    if (!current.empty()) { // add the last token if any
         tokens.push_back({ "VARIABLE", current });
     }
     return tokens;
@@ -47,18 +59,22 @@ std::vector<Token> tokenize(const std::string& input) {
 // function to parse tokens into an AST
 ASTNode* parseExpression(std::vector<Token>& tokens, size_t& idx) {
     if (tokens[idx].type == "VARIABLE" || tokens[idx].type == "CONSTANT") {
-        return new ASTNode(tokens[idx++].value);
+        return new ASTNode(tokens[idx++].value); // created leaf node before moving to next token
     }
     if (tokens[idx].value == "NOT") {
         ASTNode* node = new ASTNode("NOT");
         idx++;
-        node->left = parseExpression(tokens, idx);
+        node->left = parseExpression(tokens, idx); // parse the operand
         return node;
     }
     if (tokens[idx].value == "(") {
-        idx++;
-        ASTNode* node = parseExpression(tokens, idx);
-        idx++;
+        idx++; // skip the '('
+        ASTNode* node = parseExpression(tokens, idx); // parse the sub-expressions
+        if (idx >= tokens.size() || tokens[idx].value != ")") {
+            std::cerr << "Error: Unmatched parenthesis." << std::endl;
+            exit(10);
+        }
+        idx++; // skip the ')'
         return node;
     }
     return nullptr;
@@ -71,7 +87,15 @@ bool evaluateAST(ASTNode* node, const std::unordered_map<std::string, bool>& var
     if (node->value == "NOT") return !evaluateAST(node->left, variableValues);
     if (node->value == "AND") return evaluateAST(node->left, variableValues) && evaluateAST(node->right, variableValues);
     if (node->value == "OR") return evaluateAST(node->left, variableValues) || evaluateAST(node->right, variableValues);
-    return variableValues.at(node->value);
+    return variableValues.at(node->value); // lookup var value
+}
+
+// function to delete the AST and free memory
+void deleteAST(ASTNode* node) {
+    if (!node) return;
+    deleteAST(node->left);
+    deleteAST(node->right);
+    delete node;
 }
 
 int main() 
@@ -95,17 +119,21 @@ int main()
     std::unordered_map<std::string, bool> variableValues;
     for (const auto& var : variables) {
         std::string value;
-        std::cout << "Enter value for " << var << " (true/false or 1/0): ";
-        std::cin >> value;
-        if (value == "true" || value == "1") {
-            variableValues[var] = true;
-        } else if (value == "false" || value == "0") {
-            variableValues[var] = false;
-        } else {
-            std::cerr << "Error: Defaulting " << var << " to false." << std::endl;
-            variableValues[var] = false;
+        while (true) {
+            std::cout << "Enter value for " << var << " (true/false or 1/0): ";
+            std::cin >> value;
+            if (value == "true" || value == "1") {
+                variableValues[var] = true;
+                break;
+            } else if (value == "false" || value == "0") {
+                variableValues[var] = false;
+                break;
+            } else {
+                std::cerr << "Invalid input. Please enter true/false or 1/0." << std::endl;
+            }
         }
     }
+
     // parse the token into an AST
     size_t idx = 0;
     ASTNode* ast = parseExpression(tokens, idx);
@@ -116,5 +144,8 @@ int main()
     // output the result back to the client
     std::cout << "The result of the expression is: " << (result ? "TRUE" : "FALSE") << std::endl;
 
+    // free the dynamically allocated AST memory
+    deleteAST(ast);
+    
     return 0;
 }
